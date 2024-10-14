@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./chat-BE
+      dockerfile: Dockerfile
+    container_name: chat_backend
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: ${DATABASE_USERNAME}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_NAME: ${DATABASE_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+      NODE_ENV: ${NODE_ENV}
+    depends_on:
+      - postgres
+    command: >
+      sh -c "
+      npm run migrate && 
+      npm run seed && 
+      npm run start:dev
+      "
+    ports:
+      - '${BACKEND_PORT}:4200'
+    networks:
+      - chat_network
+
+  frontend:
+    build:
+      context: ./chat-FE
+      dockerfile: Dockerfile
+    container_name: chat_frontend
+    environment:
+      REACT_APP_API_URL: ${REACT_APP_API_URL}
+      REACT_APP_SOCKET_BASE: ${REACT_APP_SOCKET_BASE}
+    ports:
+      - '${FRONTEND_PORT}:3000'
+    depends_on:
+      - backend
+    networks:
+      - chat_network
+
+  postgres:
+    image: postgres:13
+    container_name: chat_postgres
+    environment:
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    ports:
+      - '5433:5432'  # Change the host port to 5433
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - chat_network
+
+networks:
+  chat_network:
+    driver: bridge
+
+volumes:
+  postgres_data:

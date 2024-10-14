@@ -1,0 +1,59 @@
+// ChatRooms.module.scss
+
+.chatRoomsContainer {
+  width: 400px;
+  background-color: #f7f7ff;
+  border-right: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  padding: 16px;
+  border-bottom: 1px solid #ddd;
+  position: relative;
+
+  h2 {
+    margin: 0;
+  }
+}
+
+.searchInput {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-top: 10px;
+  box-sizing: border-box;
+}
+
+.roomsList {
+  flex: 1;
+  overflow-y: auto;
+}
+
+
+
+.searchUsers {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: calc(100% - 16px);
+  width: calc(100% - 32px);
+  left: 16px;
+  z-index: 1;
+
+  .searchItem {
+    padding: 10px 10px;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #ffffff;
+
+    &:hover {
+      background: #ccc;
+    }
+  }
+}
