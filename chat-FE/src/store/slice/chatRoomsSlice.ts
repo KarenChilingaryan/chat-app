@@ -1,8 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../utils/server';
+import { Channel } from '../../types/room';
 
 interface ChatRoomsState {
-    rooms: Array<any>;
+    rooms: Array<Channel>;
     loading: boolean;
     error: string | null;
 }
@@ -15,7 +16,7 @@ const initialState: ChatRoomsState = {
 
 export const fetchChatRooms = createAsyncThunk(
     'chatRooms/fetchChatRooms',
-    async (userId: string, { rejectWithValue }) => {
+    async (userId: number, { rejectWithValue }) => {
         try {
             const response = await axiosInstance.get(`/channel/user/${userId}`);
             return response.data;
@@ -58,7 +59,7 @@ const chatRoomsSlice = createSlice({
                 if (rooms[i].id == action.payload.message.channelId) {
                     rooms[i].messages = [action.payload.message];
                     if (action.payload.isUnread && action.payload.message.userId != action.payload.userId) {
-                        rooms[i].unreadMessageCount = Number(rooms[i].unreadMessageCount) + 1
+                        rooms[i].unreadMessageCount = `${Number(rooms[i].unreadMessageCount) + 1}`
                     }
                     break
                 }

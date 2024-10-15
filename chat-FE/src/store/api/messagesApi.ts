@@ -1,6 +1,6 @@
 import axiosInstance from "../../utils/server";
 
-export const fetchMessagesByRoomIdApi = async (roomId: string, offset: number, limit: number) => {
+export const fetchMessagesByRoomIdApi = async (roomId: number, offset: number, limit: number) => {
   try {
     const response = await axiosInstance.get(`/message/channel/${roomId}`, {
       params: {

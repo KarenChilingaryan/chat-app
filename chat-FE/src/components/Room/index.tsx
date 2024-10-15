@@ -6,8 +6,10 @@ import { formatChatDate, getInitials } from '../../constants/functions';
 import socket from '../../socket';
 import { sendMessage } from '../../store/slice/messagesSlice';
 import { changeLatestMessage } from '../../store/slice/chatRoomsSlice';
+import { Message } from '../../types/messages';
+import { RoomsProps } from './type';
 
-const Rooms: React.FC<any> = ({ room, onSelectRoom, selectedRoomId }) => {
+const Rooms: React.FC<RoomsProps> = ({ room, onSelectRoom, selectedRoomId }) => {
     const { user } = useSelector((state: RootState) => state.user)
     const dispatch = useDispatch<AppDispatch>();
 
@@ -15,7 +17,7 @@ const Rooms: React.FC<any> = ({ room, onSelectRoom, selectedRoomId }) => {
         return room.messages;
     }, [room])
 
-    const messageListener = (message: any) => {
+    const messageListener = (message: Message) => {
         if (message.channelId == selectedRoomId) {
             dispatch(sendMessage(message))
         }
@@ -58,7 +60,7 @@ const Rooms: React.FC<any> = ({ room, onSelectRoom, selectedRoomId }) => {
         </div>
         <div className={styles.roomMeta}>
             <span>{lastmessage?.length ? formatChatDate(lastmessage[0].createdAt) : ''}</span>
-            {room.unreadMessageCount > 0 && <div className={styles.unreadCount}>{room.unreadMessageCount}</div>}
+            {Number(room.unreadMessageCount) > 0 && <div className={styles.unreadCount}>{room.unreadMessageCount}</div>}
         </div>
     </div>
     );

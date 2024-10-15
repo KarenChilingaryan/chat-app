@@ -6,8 +6,11 @@ import { formatChatDate, getInitials } from '../../constants/functions';
 import socket from '../../socket';
 import { clearMessages, fetchMessagesByRoomId, updateMessagesAsRead } from '../../store/slice/messagesSlice';
 import { readMessage } from '../../store/slice/chatRoomsSlice';
+import { ChatProps } from './type';
+import { Message } from '../../types/messages';
+import { Member } from '../../types/room';
 
-const Chat: React.FC<any> = ({ selectedRoomData, selectedRoomId }) => {
+const Chat: React.FC<ChatProps> = ({ selectedRoomData, selectedRoomId }) => {
     const [newMessage, setNewMessage] = React.useState<string>('');
     const { user } = useSelector((state: RootState) => state.user);
     const { messages, page, hasMore, loading } = useSelector((state: RootState) => state.messages);
@@ -51,12 +54,14 @@ const Chat: React.FC<any> = ({ selectedRoomData, selectedRoomId }) => {
     }, [handleScroll, messages]);
 
     const friend = useMemo(() => {
-        return selectedRoomData?.members.find((member: any) => member.id !== Number(user?.id));
+        return selectedRoomData?.members.find((member: Member) => member.id !== Number(user?.id));
     }, [selectedRoomData, user?.id]);
 
     useEffect(() => {
         if (selectedRoomId) {
-            dispatch(updateMessagesAsRead({ roomId: selectedRoomId, userId: friend?.id }));
+            if (friend?.id) {
+                dispatch(updateMessagesAsRead({ roomId: selectedRoomId, userId: friend?.id }));
+            }
             dispatch(readMessage(selectedRoomId))
             dispatch(clearMessages());
             dispatch(fetchMessagesByRoomId({ roomId: selectedRoomId, offset: 0, limit }));
@@ -92,20 +97,20 @@ const Chat: React.FC<any> = ({ selectedRoomData, selectedRoomId }) => {
     return (
         <div className={styles.chatContainer}>
             <div className={styles.chatHeader}>
-                <div className={styles.avatar} style={{ background: selectedRoomData.color }}>
-                    {getInitials(selectedRoomData?.name)}
+                <div className={styles.avatar} style={{ background: selectedRoomData?.color }}>
+                    {getInitials(selectedRoomData?.name || '')}
                 </div>{selectedRoomData?.name || 'User'}</div>
             <div className={styles.messagesContainer} ref={chatContainerRef}>
                 {isLoading && <p>Loading...</p>}
-                {messages.map((message: any, index: number) => (
+                {messages.map((message: Message, index: number) => (
                     <div
                         ref={index === messages.length - 1 ? lastMessageRef : null}
                         key={message.id}
                         className={`${styles.message} ${message?.userId === Number(user?.id) ? styles.senderMessage : styles.receiverMessage}`}
                     >
                         {message?.userId !== Number(user?.id) && (
-                            <div className={styles.avatar} style={{ background: friend.color }}>
-                                {getInitials(friend?.fullName)}
+                            <div className={styles.avatar} style={{ background: friend?.color }}>
+                                {getInitials(friend?.fullName || '')}
                             </div>
                         )}
                         <div className={styles.messageContent}>

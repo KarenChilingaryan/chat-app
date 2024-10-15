@@ -1,10 +1,11 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { fetchMessagesByRoomIdApi } from '../api/messagesApi';
 import { updateMessagesAsReadApi } from '../api/updateMessagesAsReadApi';
+import { Message } from '../../types/messages';
 
 export const fetchMessagesByRoomId = createAsyncThunk(
   'messages/fetchMessagesByRoomId',
-  async ({ roomId, offset, limit }: { roomId: string; offset: number; limit: number }, { rejectWithValue }) => {
+  async ({ roomId, offset, limit }: { roomId: number; offset: number; limit: number }, { rejectWithValue }) => {
     try {
       const messages = await fetchMessagesByRoomIdApi(roomId, offset, limit);
       return messages.reverse();
@@ -16,7 +17,7 @@ export const fetchMessagesByRoomId = createAsyncThunk(
 
 export const sendMessage = createAsyncThunk(
   'messages/sendMessage',
-  async (message: any, { rejectWithValue }) => {
+  async (message: Message, { rejectWithValue }) => {
     try {
       return message;
     } catch (error: any) {
@@ -27,7 +28,7 @@ export const sendMessage = createAsyncThunk(
 
 export const updateMessagesAsRead = createAsyncThunk(
   'messages/updateMessagesAsRead',
-  async ({ roomId, userId }: { roomId: string, userId: string }, { rejectWithValue }) => {
+  async ({ roomId, userId }: { roomId: number, userId: number }, { rejectWithValue }) => {
     try {
       await updateMessagesAsReadApi(roomId, userId);
       return roomId;
@@ -40,7 +41,7 @@ export const updateMessagesAsRead = createAsyncThunk(
 const messagesSlice = createSlice({
   name: 'messages',
   initialState: {
-    messages: [] as any[],
+    messages: [] as Message[],
     unreadCount: 0,
     loading: false,
     error: null as any,
@@ -82,7 +83,7 @@ const messagesSlice = createSlice({
       });
 
     builder
-      .addCase(updateMessagesAsRead.fulfilled, (state, action: PayloadAction<string>) => {
+      .addCase(updateMessagesAsRead.fulfilled, (state, action: PayloadAction<number>) => {
         const roomId = action.payload;
         state.messages = state.messages.map((message) =>
           message.channelId === roomId ? { ...message, unread: false } : message

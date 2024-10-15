@@ -6,6 +6,9 @@ services:
       context: ./chat-FE
       dockerfile: Dockerfile
     container_name: chat_frontend
+    volumes:
+      - ./chat-FE:/usr/src/app  # Mount the source code
+      - /usr/src/app/node_modules  # Ignore node_modules to avoid overwriting
     environment:
       REACT_APP_API_URL: ${REACT_APP_API_URL}
       REACT_APP_SOCKET_BASE: ${REACT_APP_SOCKET_BASE}
@@ -21,6 +24,9 @@ services:
       context: ./chat-BE
       dockerfile: Dockerfile
     container_name: chat_backend
+    volumes:
+      - ./chat-BE:/usr/src/app  # Mount the source code
+      - /usr/src/app/node_modules  # Ignore node_modules
     environment:
       DATABASE_HOST: postgres
       DATABASE_PORT: 5432
@@ -48,7 +54,7 @@ services:
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: ${DATABASE_NAME}
     ports:
-      - '5433:5432'  # Ensure the internal port is 5432 (default PostgreSQL port)
+      - '5433:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

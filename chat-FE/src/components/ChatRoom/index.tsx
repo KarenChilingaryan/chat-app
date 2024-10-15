@@ -2,24 +2,13 @@ import React, { useEffect, useState } from 'react';
 import styles from './ChatRooms.module.scss';
 import axiosInstance from '../../utils/server';
 import Rooms from '../Room';
-
-interface ChatRoomsProps {
-    rooms: Array<{
-        id: string;
-        name: string;
-        lastMessage: string;
-        unreadCount: number;
-        avatar: string;
-        time: string;
-    }>;
-    onSelectRoom: (roomId: string) => void;
-    handleCreateOrSelect: (userId: string) => void;
-    selectedRoomId: string;
-}
+import { Channel } from '../../types/room';
+import { User } from '../../types/user';
+import { ChatRoomsProps } from './type';
 
 const ChatRooms: React.FC<ChatRoomsProps> = ({ rooms, onSelectRoom, selectedRoomId, handleCreateOrSelect }) => {
     const [searchQuery, setSearchQuery] = useState('');
-    const [searchResult, setSearchResult] = useState([]);
+    const [searchResult, setSearchResult] = useState<User[]>([]);
 
     const getSearchResult = async () => {
         const response = await axiosInstance.get(`/users/search?name=${searchQuery}`)
@@ -43,7 +32,7 @@ const ChatRooms: React.FC<ChatRoomsProps> = ({ rooms, onSelectRoom, selectedRoom
                 />
                 <div className={styles.searchUsers}>
                     {
-                        searchResult.map((item: any) => <div className={styles.searchItem} onClick={() => {
+                        searchResult.map((item: User) => <div className={styles.searchItem} onClick={() => {
                             handleCreateOrSelect(item.id);
                             setSearchResult([]);
                             setSearchQuery('')
@@ -54,7 +43,7 @@ const ChatRooms: React.FC<ChatRoomsProps> = ({ rooms, onSelectRoom, selectedRoom
                 </div>
             </div>
             <div className={styles.roomsList}>
-                {rooms.map((room: any) => {
+                {rooms.map((room: Channel) => {
                     return <Rooms room={room} selectedRoomId={selectedRoomId} onSelectRoom={onSelectRoom} />
                 })}
             </div>
