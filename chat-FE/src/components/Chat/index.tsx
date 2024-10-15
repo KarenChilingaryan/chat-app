@@ -4,14 +4,18 @@ import { useSelector, useDispatch } from 'react-redux';
 import { AppDispatch, RootState } from '../../store/store';
 import { formatChatDate, getInitials } from '../../constants/functions';
 import socket from '../../socket';
-import { clearMessages, fetchMessagesByRoomId, updateMessagesAsRead } from '../../store/slice/messagesSlice';
+import {
+    clearMessages,
+    fetchMessagesByRoomId,
+    updateMessagesAsRead
+} from '../../store/slice/messagesSlice';
 import { readMessage } from '../../store/slice/chatRoomsSlice';
 import { ChatProps } from './type';
 import { Message } from '../../types/messages';
 import { Member } from '../../types/room';
 
 const Chat: React.FC<ChatProps> = ({ selectedRoomData, selectedRoomId }) => {
-    const [newMessage, setNewMessage] = React.useState<string>('');
+    const [newMessage, setNewMessage] = useState<string>('');
     const { user } = useSelector((state: RootState) => state.user);
     const { messages, page, hasMore, loading } = useSelector((state: RootState) => state.messages);
     const [isLoading, setIsLoading] = useState(false);
@@ -22,11 +26,17 @@ const Chat: React.FC<ChatProps> = ({ selectedRoomData, selectedRoomId }) => {
     const chatContainerRef = useRef<HTMLDivElement | null>(null);
     const lastMessageRef = useRef<HTMLDivElement | null>(null);
 
-    useEffect(() => {
-        if (lastMessageRef.current && chatContainerRef.current) {
-            lastMessageRef.current.scrollIntoView();
+    const scrollToBottom = useCallback(() => {
+        if (lastMessageRef.current) {
+            lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
         }
-    }, [messages]);
+    }, []);
+
+    useEffect(() => {
+        if (messages.length) {
+            scrollToBottom();
+        }
+    }, [messages, scrollToBottom]);
 
     const handleScroll = useCallback(async () => {
         const chatContainer = chatContainerRef.current;
@@ -35,23 +45,25 @@ const Chat: React.FC<ChatProps> = ({ selectedRoomData, selectedRoomId }) => {
             const previousScrollHeight = chatContainer.scrollHeight;
 
             await dispatch(fetchMessagesByRoomId({ roomId: selectedRoomId, offset: (page + 1) * limit, limit }));
+
             const newScrollHeight = chatContainer.scrollHeight;
-            setScrollTop(newScrollHeight - previousScrollHeight)
+            setScrollTop(newScrollHeight - previousScrollHeight);
 
             setIsLoading(false);
         }
     }, [dispatch, selectedRoomId, page, limit, hasMore, isLoading]);
 
     useEffect(() => {
-        if (chatContainerRef.current && messages.length) {
-            chatContainerRef.current.addEventListener('scroll', handleScroll);
+        const chatContainer = chatContainerRef.current;
+        if (chatContainer) {
+            chatContainer.addEventListener('scroll', handleScroll);
         }
         return () => {
-            if (chatContainerRef.current) {
-                chatContainerRef.current.removeEventListener('scroll', handleScroll);
+            if (chatContainer) {
+                chatContainer.removeEventListener('scroll', handleScroll);
             }
         };
-    }, [handleScroll, messages]);
+    }, [handleScroll]);
 
     const friend = useMemo(() => {
         return selectedRoomData?.members.find((member: Member) => member.id !== Number(user?.id));
@@ -59,31 +71,30 @@ const Chat: React.FC<ChatProps> = ({ selectedRoomData, selectedRoomId }) => {
 
     useEffect(() => {
         if (selectedRoomId) {
-            if (friend?.id) {
-                dispatch(updateMessagesAsRead({ roomId: selectedRoomId, userId: friend?.id }));
-            }
-            dispatch(readMessage(selectedRoomId))
             dispatch(clearMessages());
             dispatch(fetchMessagesByRoomId({ roomId: selectedRoomId, offset: 0, limit }));
+            if (friend?.id) {
+                dispatch(updateMessagesAsRead({ roomId: selectedRoomId, userId: friend.id }));
+            }
+            dispatch(readMessage(selectedRoomId));
         }
     }, [selectedRoomId, dispatch, limit, friend]);
 
-    const onSendMessage = (message: string) => {
-        if (message.trim()) {
-            const payload = { channelId: selectedRoomId, content: message, userId: user?.id };
-            if (socket) {
+    const onSendMessage = useCallback(
+        (message: string) => {
+            if (message.trim()) {
+                const payload = { channelId: selectedRoomId, content: message, userId: user?.id };
                 socket.emit('sendMessage', payload);
             }
-        }
-    };
+        },
+        [selectedRoomId, user?.id]
+    );
 
     useEffect(() => {
         if (!loading && chatContainerRef.current && scrollTop) {
             chatContainerRef.current.scrollTop = scrollTop;
         }
-    }, [loading, scrollTop])
-
-
+    }, [loading, scrollTop]);
 
     const handleSendMessage = (e: React.FormEvent) => {
         e.preventDefault();
@@ -93,13 +104,14 @@ const Chat: React.FC<ChatProps> = ({ selectedRoomData, selectedRoomId }) => {
         }
     };
 
-
     return (
         <div className={styles.chatContainer}>
             <div className={styles.chatHeader}>
                 <div className={styles.avatar} style={{ background: selectedRoomData?.color }}>
                     {getInitials(selectedRoomData?.name || '')}
-                </div>{selectedRoomData?.name || 'User'}</div>
+                </div>
+                {selectedRoomData?.name || 'User'}
+            </div>
             <div className={styles.messagesContainer} ref={chatContainerRef}>
                 {isLoading && <p>Loading...</p>}
                 {messages.map((message: Message, index: number) => (
@@ -116,7 +128,7 @@ const Chat: React.FC<ChatProps> = ({ selectedRoomData, selectedRoomId }) => {
                         <div className={styles.messageContent}>
                             <div>
                                 <p>{message.content}</p>
-                                {message.photo && <img src={message.photo} />}
+                                {message.photo && <img src={message.photo} alt="attachment" />}
                             </div>
                             <span>{formatChatDate(message.createdAt)}</span>
                         </div>
@@ -124,22 +136,18 @@ const Chat: React.FC<ChatProps> = ({ selectedRoomData, selectedRoomId }) => {
                 ))}
             </div>
             <form className={styles.messageInputContainer} onSubmit={handleSendMessage}>
-                <div
-                    className={styles.messageInput}
-                >
-                    <img src='/icons/file.svg' />
-
+                <div className={styles.messageInput}>
+                    <img src='/icons/file.svg' alt="file attachment" />
                     <input
                         type="text"
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         placeholder="Write a message..."
                     />
-                    <img src='/icons/smile.svg' />
-
+                    <img src='/icons/smile.svg' alt="emoji picker" />
                 </div>
                 <button type="submit" className={styles.sendButton}>
-                    <img src='/icons/Vector.svg' />
+                    <img src='/icons/Vector.svg' alt="send" />
                 </button>
             </form>
         </div>
