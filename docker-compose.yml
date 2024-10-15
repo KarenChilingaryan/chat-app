@@ -1,32 +1,6 @@
 version: '3.8'
 
 services:
-  backend:
-    build:
-      context: ./chat-BE
-      dockerfile: Dockerfile
-    container_name: chat_backend
-    environment:
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
-      DATABASE_USERNAME: ${DATABASE_USERNAME}
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
-      DATABASE_NAME: ${DATABASE_NAME}
-      JWT_SECRET: ${JWT_SECRET}
-      NODE_ENV: ${NODE_ENV}
-    depends_on:
-      - postgres
-    command: >
-      sh -c "
-      npm run migrate && 
-      npm run seed && 
-      npm run start:dev
-      "
-    ports:
-      - '${BACKEND_PORT}:4200'
-    networks:
-      - chat_network
-
   frontend:
     build:
       context: ./chat-FE
@@ -42,6 +16,30 @@ services:
     networks:
       - chat_network
 
+  backend:
+    build:
+      context: ./chat-BE
+      dockerfile: Dockerfile
+    container_name: chat_backend
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: ${DATABASE_USERNAME}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_NAME: ${DATABASE_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+      NODE_ENV: ${NODE_ENV}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "npm run migrate && npm run seed && npm run start:dev"
+    ports:
+      - '4200:4200'
+      - '8001:8001'
+    networks:
+      - chat_network
+
   postgres:
     image: postgres:13
     container_name: chat_postgres
@@ -50,9 +48,14 @@ services:
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: ${DATABASE_NAME}
     ports:
-      - '5433:5432'  # Change the host port to 5433
+      - '5433:5432'  # Ensure the internal port is 5432 (default PostgreSQL port)
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - chat_network
 

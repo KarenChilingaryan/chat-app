@@ -24,8 +24,6 @@ const Rooms: React.FC<any> = ({ room, onSelectRoom, selectedRoomId }) => {
     }
 
     useEffect(() => {
-        console.log(socket);
-        
         if (!socket.connected) {
             socket.connect()
         }

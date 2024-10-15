@@ -12,7 +12,14 @@ import { CreateMessageDto } from '../message/dto/create-message.dto';
 
 const port = 8001;
 
-@WebSocketGateway(port, { cors: '*' })
+@WebSocketGateway(8001, {
+  cors: {
+    origin: '*', // or your frontend domain
+    methods: ['GET', 'POST'],
+    credentials: true,
+  },
+  host: '0.0.0.0',  // Ensure the WebSocket server is listening on all interfaces
+})
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
 

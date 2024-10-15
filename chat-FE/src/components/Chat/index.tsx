@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import styles from './Chat.module.scss'; 
+import styles from './Chat.module.scss';
 import { useSelector, useDispatch } from 'react-redux';
 import { AppDispatch, RootState } from '../../store/store';
 import { formatChatDate, getInitials } from '../../constants/functions';
@@ -92,7 +92,7 @@ const Chat: React.FC<any> = ({ selectedRoomData, selectedRoomId }) => {
     return (
         <div className={styles.chatContainer}>
             <div className={styles.chatHeader}>
-                <div className={styles.avatar} style={{ background: friend.color }}>
+                <div className={styles.avatar} style={{ background: selectedRoomData.color }}>
                     {getInitials(selectedRoomData?.name)}
                 </div>{selectedRoomData?.name || 'User'}</div>
             <div className={styles.messagesContainer} ref={chatContainerRef}>
